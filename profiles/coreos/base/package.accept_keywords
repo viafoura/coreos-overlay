@@ -85,3 +85,6 @@ dev-util/checkbashisms
 =net-misc/openssh-8.1_p1-r3 ~arm64
 
 =sys-firmware/sgabios-0.1_pre8-r1 ~amd64 ~arm64
+
+=sys-libs/libsepol-2.4 **
+=sys-libs/libselinux-2.4 **
