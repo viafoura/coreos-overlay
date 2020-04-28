@@ -88,11 +88,10 @@ REQUIRED_USE="|| ( ${ALL_LLVM_TARGETS[*]} )
 "
 
 PATCHES=(
-	"${FILESDIR}"/0001-llvm-cmake-Add-additional-headers-only-if-they-exist.patch
-	"${FILESDIR}"/1.34.2-fix-custom-libdir.patch
-	"${FILESDIR}"/1.35.0-revert-commits-triggering-multiple-llvm-rebuilds.patch
-	"${FILESDIR}"/1.36.0-libressl.patch
-	"${FILESDIR}"/1.36.0-libressl3.patch
+	"${FILESDIR}"/1.40.0-add-soname.patch
+	"${FILESDIR}"/0012-Ignore-broken-and-non-applicable-tests.patch
+	"${FILESDIR}"/1.43.0-llvm10.patch
+	"${FILESDIR}"/1.42.0-libressl.patch
 )
 
 S="${WORKDIR}/${MY_P}-src"
@@ -220,29 +219,9 @@ src_configure() {
 		fi
 	done
 	if [ -f /usr/bin/aarch64-cros-linux-gnu-gcc ]; then
-		cat <<- 'EOF' > "${S}/cc.sh"
-			#!/bin/bash
-			args=("$@")
-			filtered=()
-			for i in "${args[@]}"; do
-			  if [ "$i" != "-mindirect-branch-register" ] && [ "$i" != "-mindirect-branch=thunk" ]; then
-			    filtered+=("$i")
-			  fi
-			done
-			aarch64-cros-linux-gnu-gcc --sysroot=/usr/aarch64-cros-linux-gnu "${filtered[@]}"
-		EOF
-		cat <<- 'EOF' > "${S}/cxx.sh"
-			#!/bin/bash
-			args=("$@")
-			filtered=()
-			for i in "${args[@]}"; do
-			  if [ "$i" != "-mindirect-branch-register" ] && [ "$i" != "-mindirect-branch=thunk" ]; then
-			    filtered+=("$i")
-			  fi
-			done
-			aarch64-cros-linux-gnu-g++ --sysroot=/usr/aarch64-cros-linux-gnu "${filtered[@]}"
-		EOF
-		chmod +x "${S}/cc.sh" "${S}/cxx.sh"
+		printf '#!/bin/sh\naarch64-cros-linux-gnu-gcc --sysroot=/usr/aarch64-cros-linux-gnu "$@"' > ${S}/cc.sh
+		printf '#!/bin/sh\naarch64-cros-linux-gnu-g++ --sysroot=/usr/aarch64-cros-linux-gnu "$@"' > ${S}/cxx.sh
+		chmod +x ${S}/cc.sh ${S}/cxx.sh
 		cat <<- EOF >> "${S}"/config.toml
 			[target.aarch64-unknown-linux-gnu]
 			cc = "${S}/cc.sh"
